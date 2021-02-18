@@ -10,6 +10,18 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+const dropTable = (table) => {
+  return new Promise((resolve, reject) => {
+    pool.query("DROP TABLE IF EXISTS " + table, (error, result) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      }
+      resolve(true);
+    });
+  });
+};
+
 const insertTrack = (start) => {
   return new Promise((resolve, reject) => {
     pool.query(
@@ -41,4 +53,5 @@ const insertPosition = (position, trackId) => {
 module.exports = {
   insertTrack,
   insertPosition,
+  dropTable,
 };

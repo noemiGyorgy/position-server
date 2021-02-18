@@ -13,6 +13,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 const server = http.createServer(app);
 
+dbController.initialize();
+
 const clientSocket = io.connect("http://localhost:5000", {
   withCredentials: true,
 });

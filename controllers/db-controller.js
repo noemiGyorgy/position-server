@@ -1,10 +1,21 @@
 const db = require("../database/queries");
 let trackId = -1;
 
+const initialize = () => {
+  db.dropTable("position").then((isDropped) => {
+    if (isDropped) {
+      db.dropTable("track").then((isDropped) => {
+        if (isDropped) {
+          //createTrackTable().then(isCreated => {})
+        }
+      });
+    }
+  });
+};
+
 const savePosition = (position) => {
   if (trackId === -1) {
-    promise = db.insertTrack(position.start);
-    promise.then((id) => {
+    db.insertTrack(position.start).then((id) => {
       trackId = id;
       db.insertPosition(position, trackId);
     });
@@ -14,5 +25,6 @@ const savePosition = (position) => {
 };
 
 module.exports = {
+  initialize,
   savePosition,
 };
