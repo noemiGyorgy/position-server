@@ -6,12 +6,13 @@ const io = require("socket.io-client");
 const dbController = require("./controllers/db-controller.js");
 require("dotenv").config();
 
-const port = 4000 || process.env.PORT;
+const port = process.env.PORT;
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 const server = http.createServer(app);
+let stopped = true;
 
 dbController.initialize();
 
@@ -24,7 +25,9 @@ clientSocket.on("connection", (message) => {
 });
 
 clientSocket.on("position", (position) => {
-  dbController.savePosition(position);
+  if (!stopped) {
+    dbController.savePosition(position);
+  }
 });
 
 clientSocket.on("endOfTrack", (message) => {
