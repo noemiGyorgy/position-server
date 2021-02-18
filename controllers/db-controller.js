@@ -6,7 +6,9 @@ const initialize = () => {
     if (isDropped) {
       db.dropTable("track").then((isDropped) => {
         if (isDropped) {
-          //createTrackTable().then(isCreated => {})
+          db.createTrackTable().then((isCreated) => {
+            //db.createPositionTable();
+          });
         }
       });
     }
