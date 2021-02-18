@@ -3,7 +3,7 @@ const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const io = require("socket.io-client");
-const db = require("./database/queries");
+const dbController = require("./controllers/db-controller.js");
 require("dotenv").config();
 
 const port = 4000 || process.env.PORT;
@@ -22,8 +22,7 @@ clientSocket.on("connection", (message) => {
 });
 
 clientSocket.on("position", (position) => {
-  console.log(position);
-  db.savePosition(position);
+  dbController.savePosition(position);
 });
 
 server.listen(port, () => {

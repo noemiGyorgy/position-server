@@ -10,11 +10,27 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-const savePosition = (position) => {
+const insertTrack = (start) => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "INSERT INTO track (start, islive) VALUES ($1, $2) RETURNING id",
+      [new Date(start), true],
+      (error, result) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        }
+        resolve(result.rows[0].id);
+      }
+    );
+  });
+};
+
+const insertPosition = (position, trackId) => {
   pool.query(
-    "INSERT INTO position (latitude, longitude, heading) VALUES ($1, $2, $3)",
-    [position.lat, position.lon, position.heading],
-    (error, results) => {
+    "INSERT INTO position (latitude, longitude, heading, track_id) VALUES ($1, $2, $3, $4)",
+    [position.lat, position.lon, position.heading, trackId],
+    (error, result) => {
       if (error) {
         console.log(error);
       }
@@ -23,5 +39,6 @@ const savePosition = (position) => {
 };
 
 module.exports = {
-  savePosition,
+  insertTrack,
+  insertPosition,
 };
