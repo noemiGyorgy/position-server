@@ -15,6 +15,11 @@ const initialize = () => {
   });
 };
 
+const terminateLiveStreaming = () => {
+  db.turnOffLive(trackId);
+  trackId = -1;
+};
+
 const savePosition = (position) => {
   if (trackId === -1) {
     db.insertTrack(position.start).then((id) => {
@@ -29,4 +34,5 @@ const savePosition = (position) => {
 module.exports = {
   initialize,
   savePosition,
+  terminateLiveStreaming,
 };

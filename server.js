@@ -27,6 +27,10 @@ clientSocket.on("position", (position) => {
   dbController.savePosition(position);
 });
 
+clientSocket.on("endOfTrack", (message) => {
+  dbController.terminateLiveStreaming();
+});
+
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

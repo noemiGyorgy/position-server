@@ -91,10 +91,23 @@ const insertPosition = (position, trackId) => {
   );
 };
 
+const turnOffLive = (trackId) => {
+  pool.query(
+    "UPDATE track SET live = false WHERE id = ($1)",
+    [trackId],
+    (error, result) => {
+      if (error) {
+        console.log(error);
+      }
+    }
+  );
+};
+
 module.exports = {
   insertTrack,
   insertPosition,
   dropTable,
   createTrackTable,
   createPositionTable,
+  turnOffLive,
 };
