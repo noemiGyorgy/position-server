@@ -25,7 +25,33 @@ const dropTable = (table) => {
 const createTrackTable = () => {
   return new Promise((resolve, reject) => {
     pool.query(
-      "CREATE TABLE track (id SERIAL NOT NULL CONSTRAINT track_pk PRIMARY KEY, start  TIMESTAMP WITH TIME ZONE, live BOOLEAN); CREATE INDEX track_start_index ON track (start desc);",
+      "CREATE TABLE track (\
+        id SERIAL NOT NULL CONSTRAINT track_pk PRIMARY KEY,\
+        start  TIMESTAMP WITH TIME ZONE,\
+        live BOOLEAN\
+      );\
+      CREATE INDEX track_start_index ON track (start desc);",
+      (error, result) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        }
+        resolve(true);
+      }
+    );
+  });
+};
+
+const createPositionTable = () => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "CREATE TABLE position (\
+        id SERIAL NOT NULL CONSTRAINT position_pk PRIMARY KEY,\
+        latitude  NUMERIC(10, 8),\
+        longitude NUMERIC(11, 8),\
+        heading   NUMERIC(12, 9),\
+        track_id  INTEGER CONSTRAINT position_track_fk REFERENCES track\
+      )",
       (error, result) => {
         if (error) {
           console.log(error);
@@ -40,7 +66,7 @@ const createTrackTable = () => {
 const insertTrack = (start) => {
   return new Promise((resolve, reject) => {
     pool.query(
-      "INSERT INTO track (start, islive) VALUES ($1, $2) RETURNING id",
+      "INSERT INTO track (start, live) VALUES ($1, $2) RETURNING id",
       [new Date(start), true],
       (error, result) => {
         if (error) {
@@ -70,4 +96,5 @@ module.exports = {
   insertPosition,
   dropTable,
   createTrackTable,
+  createPositionTable,
 };
