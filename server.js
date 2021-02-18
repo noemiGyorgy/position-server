@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const io = require("socket.io-client");
 const db = require("./database/queries");
+require("dotenv").config();
 
 const port = 4000 || process.env.PORT;
 const app = express();
@@ -21,7 +22,7 @@ clientSocket.on("connection", (message) => {
 });
 
 clientSocket.on("position", (position) => {
-  console.log("Position: " + position);
+  console.log(position);
   db.savePosition(position);
 });
 
