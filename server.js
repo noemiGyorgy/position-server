@@ -2,20 +2,28 @@ const path = require("path");
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
-const io = require("socket.io-client");
+const clientIo = require("socket.io-client");
 const dbController = require("./controllers/db-controller.js");
 require("dotenv").config();
 
-const port = 4000 || process.env.PORT;
+const port = process.env.PORT;
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 const server = http.createServer(app);
+const serverIo = require("socket.io")(server, {
+  cors: {
+    origin: process.env.FRONTEND,
+    methods: ["GET", "POST", "PUT"],
+    credentials: true,
+  },
+});
+let stopped = false;
 
 dbController.initialize();
 
-const clientSocket = io.connect("http://localhost:5000", {
+const clientSocket = clientIo.connect(process.env.STREAMER, {
   withCredentials: true,
 });
 
@@ -24,11 +32,28 @@ clientSocket.on("connection", (message) => {
 });
 
 clientSocket.on("position", (position) => {
-  dbController.savePosition(position);
+  if (!stopped) {
+    dbController.savePosition(position);
+  }
+  serverIo.emit("position", { ...position, stopped: stopped });
 });
 
 clientSocket.on("endOfTrack", (message) => {
   dbController.terminateLiveStreaming();
+  serverIo.emit("endOfTrack", message);
+});
+
+serverIo.on("connection", (socket) => {
+  serverIo.emit("connection", "Connected to the server.");
+});
+
+app.put("/status", (req, res) => {
+  stopped = !stopped;
+  res.send({ stopped: stopped });
+});
+
+app.get("/tracks", (req, res) => {
+  dbController.getTracks().then((rows) => res.send(rows));
 });
 
 server.listen(port, () => {

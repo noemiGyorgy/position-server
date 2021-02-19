@@ -50,8 +50,7 @@ const createPositionTable = () => {
         latitude  NUMERIC(10, 8),\
         longitude NUMERIC(11, 8),\
         heading   NUMERIC(12, 9),\
-        track_id  INTEGER CONSTRAINT position_track_fk REFERENCES track\
-      )",
+        track_id  INTEGER CONSTRAINT position_track_fk REFERENCES track)",
       (error, result) => {
         if (error) {
           console.log(error);
@@ -103,6 +102,22 @@ const turnOffLive = (trackId) => {
   );
 };
 
+const getTracks = () => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "SELECT start, live, json_agg(json_build_object('lat', latitude, 'lon', longitude, 'heading', heading)) AS pos\
+      FROM track JOIN position ON track.id = position.track_id GROUP BY start, live",
+      (error, result) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        }
+        resolve(result.rows);
+      }
+    );
+  });
+};
+
 module.exports = {
   insertTrack,
   insertPosition,
@@ -110,4 +125,5 @@ module.exports = {
   createTrackTable,
   createPositionTable,
   turnOffLive,
+  getTracks,
 };
