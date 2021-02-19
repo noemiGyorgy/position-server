@@ -31,8 +31,15 @@ const savePosition = (position) => {
   }
 };
 
+const getTracks = () => {
+  return new Promise((resolve, reject) => {
+    db.getTracks().then((rows) => resolve(rows));
+  });
+};
+
 module.exports = {
   initialize,
   savePosition,
   terminateLiveStreaming,
+  getTracks,
 };
