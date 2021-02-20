@@ -16,8 +16,12 @@ const initialize = () => {
 };
 
 const terminateLiveStreaming = () => {
-  db.turnOffLive(trackId);
-  trackId = -1;
+  return new Promise((resolve, reject) => {
+    db.turnOffLive(trackId).then((success) => {
+      trackId = -1;
+      resolve(success);
+    });
+  });
 };
 
 const savePosition = (position) => {

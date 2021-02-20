@@ -10,7 +10,13 @@ const port = process.env.PORT;
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(
+  cors({
+    origin: [process.env.FRONTEND, process.env.FRONTEND + "/tracks"],
+    methods: ["GET", "POST", "PUT"],
+    credentials: true,
+  })
+);
 const server = http.createServer(app);
 const serverIo = require("socket.io")(server, {
   cors: {
@@ -39,8 +45,10 @@ clientSocket.on("position", (position) => {
 });
 
 clientSocket.on("endOfTrack", (message) => {
-  dbController.terminateLiveStreaming();
-  serverIo.emit("endOfTrack", message);
+  dbController
+    .terminateLiveStreaming()
+    .then(() => dbController.getTracks())
+    .then((rows) => serverIo.emit("endOfTrack", rows));
 });
 
 serverIo.on("connection", (socket) => {
@@ -52,9 +60,7 @@ app.put("/status", (req, res) => {
   res.send({ stopped: stopped });
 });
 
-app.get("/tracks", (req, res) => {
-  dbController.getTracks().then((rows) => res.send(rows));
-});
+app.get("/tracks", (req, res) => {});
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);

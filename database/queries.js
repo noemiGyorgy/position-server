@@ -91,30 +91,31 @@ const insertPosition = (position, trackId) => {
 };
 
 const turnOffLive = (trackId) => {
-  pool.query(
-    "UPDATE track SET live = false WHERE id = ($1)",
-    [trackId],
-    (error, result) => {
-      if (error) {
-        console.log(error);
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "UPDATE track SET live = false WHERE id = ($1)",
+      [trackId],
+      (error, result) => {
+        if (error) {
+          console.log(error);
+        } else {
+          resolve(true);
+        }
       }
-    }
-  );
+    );
+  });
 };
 
 const getTracks = () => {
   return new Promise((resolve, reject) => {
-    pool.query(
-      "SELECT start, live, json_agg(json_build_object('lat', latitude, 'lon', longitude, 'heading', heading)) AS pos\
-      FROM track JOIN position ON track.id = position.track_id GROUP BY start, live",
-      (error, result) => {
-        if (error) {
-          console.log(error);
-          reject(error);
-        }
-        resolve(result.rows);
+    pool.query("SELECT * FROM track", (error, result) => {
+      if (error) {
+        console.log(error);
+        reject(error);
       }
-    );
+      console.log(result.rows);
+      resolve(result.rows);
+    });
   });
 };
 
