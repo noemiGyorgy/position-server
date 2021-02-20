@@ -113,7 +113,6 @@ const getTracks = () => {
         console.log(error);
         reject(error);
       }
-      console.log(result.rows);
       resolve(result.rows);
     });
   });

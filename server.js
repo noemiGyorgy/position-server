@@ -52,7 +52,7 @@ clientSocket.on("endOfTrack", (message) => {
 });
 
 serverIo.on("connection", (socket) => {
-  serverIo.emit("connection", "Connected to the server.");
+  dbController.getTracks().then((rows) => serverIo.emit("connection", rows));
 });
 
 app.put("/status", (req, res) => {
