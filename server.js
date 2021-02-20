@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 app.use(
   cors({
-    origin: [process.env.FRONTEND, process.env.FRONTEND + "/tracks"],
+    origin: process.env.FRONTEND,
     methods: ["GET", "POST", "PUT"],
     credentials: true,
   })
@@ -59,8 +59,6 @@ app.put("/status", (req, res) => {
   stopped = !stopped;
   res.send({ stopped: stopped });
 });
-
-app.get("/tracks", (req, res) => {});
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
