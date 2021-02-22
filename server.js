@@ -10,7 +10,13 @@ const port = process.env.PORT;
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND,
+    methods: ["GET", "POST", "PUT"],
+    credentials: true,
+  })
+);
 const server = http.createServer(app);
 const serverIo = require("socket.io")(server, {
   cors: {
@@ -39,21 +45,28 @@ clientSocket.on("position", (position) => {
 });
 
 clientSocket.on("endOfTrack", (message) => {
-  dbController.terminateLiveStreaming();
-  serverIo.emit("endOfTrack", message);
+  dbController
+    .terminateLiveStreaming()
+    .then(() => dbController.getTracks())
+    .then((rows) => serverIo.emit("endOfTrack", rows));
 });
 
 serverIo.on("connection", (socket) => {
-  serverIo.emit("connection", "Connected to the server.");
+  dbController
+    .getTracks()
+    .then((rows) =>
+      serverIo.emit("connection", { tracks: rows, stopped: stopped })
+    );
 });
 
 app.put("/status", (req, res) => {
   stopped = !stopped;
   res.send({ stopped: stopped });
+  serverIo.emit("stopped", stopped);
 });
 
-app.get("/tracks", (req, res) => {
-  dbController.getTracks().then((rows) => res.send(rows));
+app.get("/track/:id", (req, res) => {
+  dbController.getTrack(req.params.id).then((rows) => res.send(rows));
 });
 
 server.listen(port, () => {

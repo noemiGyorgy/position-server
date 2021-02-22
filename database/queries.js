@@ -47,8 +47,8 @@ const createPositionTable = () => {
     pool.query(
       "CREATE TABLE position (\
         id SERIAL NOT NULL CONSTRAINT position_pk PRIMARY KEY,\
-        latitude  NUMERIC(10, 8),\
-        longitude NUMERIC(11, 8),\
+        lat  NUMERIC(10, 8),\
+        lon NUMERIC(11, 8),\
         heading   NUMERIC(12, 9),\
         track_id  INTEGER CONSTRAINT position_track_fk REFERENCES track)",
       (error, result) => {
@@ -80,7 +80,7 @@ const insertTrack = (start) => {
 
 const insertPosition = (position, trackId) => {
   pool.query(
-    "INSERT INTO position (latitude, longitude, heading, track_id) VALUES ($1, $2, $3, $4)",
+    "INSERT INTO position (lat, lon, heading, track_id) VALUES ($1, $2, $3, $4)",
     [position.lat, position.lon, position.heading, trackId],
     (error, result) => {
       if (error) {
@@ -91,22 +91,38 @@ const insertPosition = (position, trackId) => {
 };
 
 const turnOffLive = (trackId) => {
-  pool.query(
-    "UPDATE track SET live = false WHERE id = ($1)",
-    [trackId],
-    (error, result) => {
-      if (error) {
-        console.log(error);
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "UPDATE track SET live = false WHERE id = ($1)",
+      [trackId],
+      (error, result) => {
+        if (error) {
+          console.log(error);
+        } else {
+          resolve(true);
+        }
       }
-    }
-  );
+    );
+  });
 };
 
 const getTracks = () => {
   return new Promise((resolve, reject) => {
+    pool.query("SELECT * FROM track ORDER BY start DESC", (error, result) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      }
+      resolve(result.rows);
+    });
+  });
+};
+
+const getTrack = (trackId) => {
+  return new Promise((resolve, reject) => {
     pool.query(
-      "SELECT start, live, json_agg(json_build_object('lat', latitude, 'lon', longitude, 'heading', heading)) AS pos\
-      FROM track JOIN position ON track.id = position.track_id GROUP BY start, live",
+      "SELECT lat, lon, heading FROM position WHERE track_id = ($1)",
+      [trackId],
       (error, result) => {
         if (error) {
           console.log(error);
@@ -126,4 +142,5 @@ module.exports = {
   createPositionTable,
   turnOffLive,
   getTracks,
+  getTrack,
 };
