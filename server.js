@@ -52,12 +52,21 @@ clientSocket.on("endOfTrack", (message) => {
 });
 
 serverIo.on("connection", (socket) => {
-  dbController.getTracks().then((rows) => serverIo.emit("connection", rows));
+  dbController
+    .getTracks()
+    .then((rows) =>
+      serverIo.emit("connection", { tracks: rows, stopped: stopped })
+    );
 });
 
 app.put("/status", (req, res) => {
   stopped = !stopped;
   res.send({ stopped: stopped });
+  serverIo.emit("stopped", stopped);
+});
+
+app.get("/track/:id", (req, res) => {
+  dbController.getTrack(req.params.id).then((rows) => res.send(rows));
 });
 
 server.listen(port, () => {

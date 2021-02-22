@@ -47,8 +47,8 @@ const createPositionTable = () => {
     pool.query(
       "CREATE TABLE position (\
         id SERIAL NOT NULL CONSTRAINT position_pk PRIMARY KEY,\
-        latitude  NUMERIC(10, 8),\
-        longitude NUMERIC(11, 8),\
+        lat  NUMERIC(10, 8),\
+        lon NUMERIC(11, 8),\
         heading   NUMERIC(12, 9),\
         track_id  INTEGER CONSTRAINT position_track_fk REFERENCES track)",
       (error, result) => {
@@ -80,7 +80,7 @@ const insertTrack = (start) => {
 
 const insertPosition = (position, trackId) => {
   pool.query(
-    "INSERT INTO position (latitude, longitude, heading, track_id) VALUES ($1, $2, $3, $4)",
+    "INSERT INTO position (lat, lon, heading, track_id) VALUES ($1, $2, $3, $4)",
     [position.lat, position.lon, position.heading, trackId],
     (error, result) => {
       if (error) {
@@ -108,13 +108,29 @@ const turnOffLive = (trackId) => {
 
 const getTracks = () => {
   return new Promise((resolve, reject) => {
-    pool.query("SELECT * FROM track", (error, result) => {
+    pool.query("SELECT * FROM track ORDER BY start DESC", (error, result) => {
       if (error) {
         console.log(error);
         reject(error);
       }
       resolve(result.rows);
     });
+  });
+};
+
+const getTrack = (trackId) => {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      "SELECT lat, lon, heading FROM position WHERE track_id = ($1)",
+      [trackId],
+      (error, result) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        }
+        resolve(result.rows);
+      }
+    );
   });
 };
 
@@ -126,4 +142,5 @@ module.exports = {
   createPositionTable,
   turnOffLive,
   getTracks,
+  getTrack,
 };
