@@ -1,6 +1,10 @@
 const db = require("../database/queries");
 let trackId = -1;
 
+const getTrackId = () => {
+  return trackId;
+}
+
 const initialize = () => {
   db.dropTable("position").then((isDropped) => {
     if (isDropped) {
@@ -24,20 +28,25 @@ const terminateLiveStreaming = () => {
   });
 };
 
-const savePosition = (position) => {
+const savePosition = (position, pause) => {
   if (trackId === -1) {
     db.insertTrack(position.start).then((id) => {
       trackId = id;
-      db.insertPosition(position, trackId);
+      db.insertPosition(position, pause, trackId);
     });
   } else {
-    db.insertPosition(position, trackId);
+    db.insertPosition(position, pause, trackId);
   }
 };
 
 const getTracks = () => {
   return new Promise((resolve, reject) => {
-    db.getTracks().then((rows) => resolve(rows));
+    db.getTracks().then((rows) => {
+      let tracks = {};
+      for (let index in rows) {
+        tracks[rows[index].id] = {start: rows[index].start, live: rows[index].live}
+      }
+      resolve(tracks)});
   });
 };
 
@@ -48,6 +57,7 @@ const getTrack = (id) => {
 };
 
 module.exports = {
+  getTrackId,
   initialize,
   savePosition,
   terminateLiveStreaming,

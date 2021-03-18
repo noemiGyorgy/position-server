@@ -26,6 +26,7 @@ const serverIo = require("socket.io")(server, {
   },
 });
 let stopped = false;
+let pause = false;
 
 dbController.initialize();
 
@@ -39,16 +40,29 @@ clientSocket.on("connection", (message) => {
 
 clientSocket.on("position", (position) => {
   if (!stopped) {
-    dbController.savePosition(position);
+    dbController.savePosition(position, pause);
   }
-  serverIo.emit("position", { ...position, stopped: stopped });
+  serverIo.emit("position", { ...position, stopped: stopped, id: dbController.getTrackId() });
+  if (pause) {
+    pause = false;
+  }
 });
 
 clientSocket.on("endOfTrack", (message) => {
-  dbController
+  const finishedTrackId = dbController.getTrackId();
+  if (finishedTrackId == -1) {
+      dbController
+      .terminateLiveStreaming()
+      .then(() => dbController.getTracks())
+      .then((rows) => serverIo.emit("endOfTrack", {tracks: rows, finishedTrack: finishedTrackId}));
+  } else {
+  dbController.getTrack(finishedTrackId).then((track) => {
+    dbController
     .terminateLiveStreaming()
     .then(() => dbController.getTracks())
-    .then((rows) => serverIo.emit("endOfTrack", rows));
+    .then((rows) => serverIo.emit("endOfTrack", {tracks: rows, finishedTrack: track}));
+  });
+}
 });
 
 serverIo.on("connection", (socket) => {
@@ -61,12 +75,15 @@ serverIo.on("connection", (socket) => {
 
 app.put("/status", (req, res) => {
   stopped = !stopped;
+  if (!stopped) {
+    pause = true;
+  }
   res.send({ stopped: stopped });
   serverIo.emit("stopped", stopped);
 });
 
 app.get("/track/:id", (req, res) => {
-  dbController.getTrack(req.params.id).then((rows) => res.send(rows));
+  dbController.getTrack(req.params.id).then((track) => res.send(track));
 });
 
 server.listen(port, () => {
